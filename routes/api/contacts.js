@@ -33,7 +33,7 @@ router.get("/", async (req, res, next) => {
       data: { contacts },
     });
   } catch (err) {
-    res.status(500).json(`Error getting the contact list: ${err}`);
+    res.status(500).json(`Error getting the contact list : ${err}`);
   }
 });
 
