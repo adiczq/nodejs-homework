@@ -1,5 +1,4 @@
 import express from "express";
-import Joi from "joi";
 
 import {
   listContacts,
@@ -10,18 +9,6 @@ import {
 } from "./../../models/contacts.js";
 
 export const router = express.Router();
-
-const schemaAdd = Joi.object({
-  name: Joi.string().required(),
-  email: Joi.string().email().required(),
-  phone: Joi.string().required(),
-});
-
-const schemaEdit = Joi.object({
-  name: Joi.string(),
-  email: Joi.string().email(),
-  phone: Joi.string(),
-}).unknown(false);
 
 router.get("/", async (req, res, next) => {
   try {
@@ -42,12 +29,6 @@ router.get("/:id", async (req, res, next) => {
   try {
     const contact = await getContactById(id);
 
-    if (!contact) {
-      res.status(404).json(`Contact with id ${id} not found`);
-
-      return false;
-    }
-
     return res.json({
       status: "success",
       code: 200,
@@ -59,38 +40,22 @@ router.get("/:id", async (req, res, next) => {
 });
 
 router.post("/", async (req, res, next) => {
-  const body = req.body;
+  const { body } = req;
 
   if (Object.keys(body).length === 0) {
-    res.status(400).json("Error, empty request is not allowed");
-
-    return;
-  }
-
-  const { error } = schemaAdd.validate(body);
-
-  if (error) {
-    res.status(400).json(`Error: ${error.details[0].message}`);
-
-    return;
+    return res.status(400).json("Error, empty request is not allowed");
   }
 
   try {
     const contact = await addContact(body);
 
-    if (!contact) {
-      res.status(404).json(`Contact not found`);
-
-      return false;
-    }
-
-    res.status(201).json({
+    return res.status(201).json({
       status: "success",
       code: 201,
       data: { contact },
     });
   } catch (err) {
-    res.status(500).json(`An adding the contact: ${err}`);
+    res.status(500).json(`An error adding the contact: ${err}`);
   }
 });
 
@@ -99,13 +64,7 @@ router.delete("/:id", async (req, res, next) => {
   try {
     const isContactRemoved = await removeContact(id);
 
-    if (!isContactRemoved) {
-      res.status(404).json(`Contact with id ${id} not found`);
-
-      return false;
-    }
-
-    res.status(200).json({
+    return res.status(200).json({
       message: `Contact with ID ${id} removed.`,
     });
   } catch (err) {
@@ -115,37 +74,40 @@ router.delete("/:id", async (req, res, next) => {
 
 router.put("/:id", async (req, res, next) => {
   const { id } = req.params;
-  const body = req.body;
+  const { body } = req;
 
   if (Object.keys(body).length === 0) {
-    res.status(400).json("Error, empty request is not allowed");
-
-    return;
-  }
-
-  const { error } = schemaEdit.validate(body);
-
-  if (error) {
-    res.status(400).json(`Error field: ${error.details[0].message}`);
-
-    return;
+    return res.status(400).json("Error, empty request is not allowed");
   }
 
   try {
     const updatedContact = await updateContact(id, body);
 
-    if (!updatedContact) {
-      res.status(404).json(`Contact with id ${id} not found`);
-
-      return false;
-    }
-
-    res.json({
+    return res.json({
       status: "success",
       code: 200,
       data: { updatedContact },
     });
   } catch (err) {
     res.status(500).json(`Error updating the contact: ${err}`);
+  }
+});
+
+router.patch("/:id ", async (req, res, netxt) => {
+  const { id } = req.params;
+  const { body } = req;
+  const { favorite } = body;
+  if (!("favorite" in body) || Object.keys(body).length === 0) {
+    return res.status(400).json("missing field favorite");
+  }
+  try {
+    const updateStatus = await updateStatusContact(id, favorite);
+    return res.json({
+      status: "succes",
+      code: 200,
+      data: { updateStatus },
+    });
+  } catch (err) {
+    res.status(404).json("Not found");
   }
 });
