@@ -6,6 +6,7 @@ import {
   removeContact,
   addContact,
   updateContact,
+  updatedStatusContact,
 } from "./../../models/contacts.js";
 
 export const router = express.Router();
@@ -101,7 +102,7 @@ router.patch("/:id", async (req, res, netxt) => {
     return res.status(400).json("missing field favorite");
   }
   try {
-    const updateStatus = await updateStatusContact(id, favorite);
+    const updateStatus = await updatedStatusContact(id, favorite);
     return res.json({
       status: "succes",
       code: 200,
