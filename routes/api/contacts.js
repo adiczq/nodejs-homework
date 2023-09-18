@@ -93,7 +93,7 @@ router.put("/:id", async (req, res, next) => {
   }
 });
 
-router.patch("/:id ", async (req, res, netxt) => {
+router.patch("/:id", async (req, res, netxt) => {
   const { id } = req.params;
   const { body } = req;
   const { favorite } = body;
