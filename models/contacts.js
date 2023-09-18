@@ -38,13 +38,11 @@ export const addContact = async (body) => {
 
 export const updateContact = async (contactId, body) => {
   try {
-    return await Contact.findByIdAndUpdate(
-      { _id: contactId },
-      { $set: { favorite: favorite } },
-      { new: true }
-    );
+    return await Contact.findByIdAndUpdate({ _id: contactId }, body, {
+      new: true,
+    });
   } catch (err) {
-    console.error(`Error updating contact `, err);
+    console.error(`Error updating contact: `, err);
     throw err;
   }
 };
@@ -57,7 +55,7 @@ export const updatedStatusContact = async (contactId, favorite) => {
       { new: true }
     );
   } catch (err) {
-    console.error("An error occurred while updating contact: ", err);
+    console.error("Error updating contact: ", err);
     throw err;
   }
 };
