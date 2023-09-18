@@ -48,3 +48,16 @@ export const updateContact = async (contactId, body) => {
     throw err;
   }
 };
+
+export const updatedStatusContact = async (contactId, favorite) => {
+  try {
+    return await Contact.findByIdAndUpdate(
+      { _id: contactId },
+      { $set: { favorite: favorite } },
+      { new: true }
+    );
+  } catch (err) {
+    console.error("An error occurred while updating contact: ", err);
+    throw err;
+  }
+};
