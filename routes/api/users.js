@@ -26,7 +26,7 @@ usersRouter.get("/current", auth, async (req, res, next) => {
   }
 });
 
-usersRouter.post("/signup", auth, async (req, res, next) => {
+usersRouter.post("/signup",  async (req, res, next) => {
   const { body } = req;
   if (Object.keys(body).length === 0) {
     return res.status(400).json("Error, empty request is not allowed");
@@ -47,7 +47,7 @@ usersRouter.post("/signup", auth, async (req, res, next) => {
   }
 });
 
-usersRouter.post("/login", auth, async (req, res, next) => {
+usersRouter.post("/login",  async (req, res, next) => {
   const { body } = req;
   if (Object.keys(body).length === 0) {
     return res.status(400).json("Error, empty request is not allowed");
