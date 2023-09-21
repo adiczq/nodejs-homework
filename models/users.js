@@ -1,5 +1,8 @@
 import User from "../services/schemas/users.js";
 import bcrypt from "bcrypt";
+import Jimp from "jimp";
+import fs from "fs/promises";
+import gravatar from "gravatar";
 
 export const getAllUsers = async () => {
   try {
@@ -27,7 +30,8 @@ export const addUser = async (body) => {
   try {
     const salt = await bcrypt.genSalt();
     const passwordHash = await bcrypt.hash(password, salt);
-    const user = { ...body, password: passwordHash };
+    const avatar = gravatar.url(email, { size: "250" });
+    const user = { ...body, password: passwordHash, avatarUrl: avatar };
     await User.create(user);
     return user;
   } catch (err) {
@@ -64,6 +68,28 @@ export const patchUser = async (subscription, userId) => {
     );
   } catch (err) {
     console.error("error updating user", err);
+    throw err;
+  }
+};
+
+export const patchAvatar = async (filePath, userId) => {
+  try {
+    const localPath = `public/avatars/avatar-${userId}.jpg`;
+    const serverPath = `http://localhost:3000/${localPath.replace(
+      /^public\//,
+      ""
+    )}`;
+    const avatar = await Jimp.read(filePath);
+    await avatar.resize(250, 250).quality(60).grayscale().write(localPath);
+    await User.findByIdAndUpdate(
+      { _id: userId },
+      { $set: { avatarURL: localPath } },
+      { new: true, select: "avatarURL" }
+    );
+    await fs.unlink(filePath);
+    return serverPath;
+  } catch (err) {
+    console.error("error updating avatar", err);
     throw err;
   }
 };
