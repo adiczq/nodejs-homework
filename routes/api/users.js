@@ -80,7 +80,7 @@ usersRouter.post("/login",  async (req, res, next) => {
   }
 });
 
-usersRouter.post("/logut", auth, async (req, res, next) => {
+usersRouter.post("/logout", auth, async (req, res, next) => {
   try {
     const userId = req.user.id;
     const user = await getUser(userId);
