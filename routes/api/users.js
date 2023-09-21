@@ -1,8 +1,15 @@
 import express from "express";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import { getUser, addUser, loginUser, patchUser } from "../../models/users.js";
+import {
+  getUser,
+  addUser,
+  loginUser,
+  patchUser,
+  patchAvatar,
+} from "../../models/users.js";
 import { auth } from "../../config/config-pasport.js";
+import { uploadImage } from "../../config/config-multer.js";
 
 dotenv.config();
 const secret = process.env.JWT_SECRET;
@@ -26,7 +33,7 @@ usersRouter.get("/current", auth, async (req, res, next) => {
   }
 });
 
-usersRouter.post("/signup",  async (req, res, next) => {
+usersRouter.post("/signup", async (req, res, next) => {
   const { body } = req;
   if (Object.keys(body).length === 0) {
     return res.status(400).json("Error, empty request is not allowed");
@@ -47,7 +54,7 @@ usersRouter.post("/signup",  async (req, res, next) => {
   }
 });
 
-usersRouter.post("/login",  async (req, res, next) => {
+usersRouter.post("/login", async (req, res, next) => {
   const { body } = req;
   if (Object.keys(body).length === 0) {
     return res.status(400).json("Error, empty request is not allowed");
@@ -126,3 +133,27 @@ usersRouter.patch("/", auth, async (req, res, next) => {
     res.status(500).json(`Error updating : ${err}`);
   }
 });
+
+usersRouter.patch(
+  "/avatars",
+  auth,
+  uploadImage.single("avatar"),
+  async (req, res, next) => {
+    const file = req.file;
+    if (!file) {
+      return res.status(400).json("no file");
+    }
+    const { path } = file;
+    const { id: userId } = req.user;
+    try {
+      const avatarPath = await patchAvatar(path, userId);
+      return res.status(200).json({
+        status: "success",
+        code: 200,
+        avatarURL: avatarPath,
+      });
+    } catch (err) {
+      res.status(500).json(`error updating avatar ${err}`);
+    }
+  }
+);
