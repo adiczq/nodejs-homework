@@ -7,6 +7,8 @@ import {
   loginUser,
   patchUser,
   patchAvatar,
+  verifyEmail,
+  sendVerificationMail,
 } from "../../models/users.js";
 import { auth } from "../../config/config-pasport.js";
 import { uploadImage } from "../../config/config-multer.js";
@@ -157,3 +159,24 @@ usersRouter.patch(
     }
   }
 );
+
+usersRouter.get("/verify/:verificationToken", async (req, res, next) => {
+  const { verificationToken } = req.params;
+  try {
+    await verifyEmail(verificationToken);
+    return res.status(200).json({ message: "Verification successful" });
+  } catch (err) {
+    res.status(500).json({ message: `error verification ${err.message}` });
+  }
+});
+
+usersRouter.post("/verify/", async (req, res, next) => {
+  const { body } = req;
+  const { email } = body;
+  try {
+    await sendVerificationMail(email);
+    return res.status(200).json({ message: "Verification email sent" });
+  } catch (err) {
+    res.status(500).json({ message: `error verification ${err.message}` });
+  }
+});
