@@ -66,6 +66,13 @@ usersRouter.post("/login", async (req, res, next) => {
     if (!user) {
       return res.status(400).json(`Email or password is wrong`);
     }
+    if (!user.verify) {
+      return res
+        .status(401)
+        .json(
+          `Email not verified. Please check your email for verification instructions.`
+        );
+    }
     const payload = {
       id: user.id,
       username: user.email,
@@ -97,7 +104,7 @@ usersRouter.post("/logout", auth, async (req, res, next) => {
       return res.status(401).json({
         status: "error",
         code: 401,
-        message: "Not authorized3",
+        message: "Not authorized",
       });
     }
     user.token = null;
