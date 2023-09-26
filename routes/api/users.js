@@ -7,6 +7,8 @@ import {
   loginUser,
   patchUser,
   patchAvatar,
+  verifyEmail,
+  sendVerificationMail,
 } from "../../models/users.js";
 import { auth } from "../../config/config-pasport.js";
 import { uploadImage } from "../../config/config-multer.js";
@@ -64,6 +66,13 @@ usersRouter.post("/login", async (req, res, next) => {
     if (!user) {
       return res.status(400).json(`Email or password is wrong`);
     }
+    if (!user.verify) {
+      return res
+        .status(401)
+        .json(
+          `Email not verified. Please check your email for verification instructions.`
+        );
+    }
     const payload = {
       id: user.id,
       username: user.email,
@@ -95,7 +104,7 @@ usersRouter.post("/logout", auth, async (req, res, next) => {
       return res.status(401).json({
         status: "error",
         code: 401,
-        message: "Not authorized3",
+        message: "Not authorized",
       });
     }
     user.token = null;
@@ -157,3 +166,24 @@ usersRouter.patch(
     }
   }
 );
+
+usersRouter.get("/verify/:verificationToken", async (req, res, next) => {
+  const { verificationToken } = req.params;
+  try {
+    await verifyEmail(verificationToken);
+    return res.status(200).json({ message: "Verification successful" });
+  } catch (err) {
+    res.status(500).json({ message: `error verification ${err.message}` });
+  }
+});
+
+usersRouter.post("/verify/", async (req, res, next) => {
+  const { body } = req;
+  const { email } = body;
+  try {
+    await sendVerificationMail(email);
+    return res.status(200).json({ message: "Verification email sent" });
+  } catch (err) {
+    res.status(500).json({ message: `error verification ${err.message}` });
+  }
+});

@@ -3,6 +3,9 @@ import bcrypt from "bcrypt";
 import Jimp from "jimp";
 import fs from "fs/promises";
 import gravatar from "gravatar";
+import sgMail from "@sendgrid/mail";
+import { msg } from "../config/config-sendgrid.js";
+import { nanoid } from "nanoid";
 
 export const getAllUsers = async () => {
   try {
@@ -31,8 +34,15 @@ export const addUser = async (body) => {
     const salt = await bcrypt.genSalt();
     const passwordHash = await bcrypt.hash(password, salt);
     const avatar = gravatar.url(email, { size: "250" });
-    const user = { ...body, password: passwordHash, avatarUrl: avatar };
+    const verificationToken = nanoid();
+    const user = {
+      ...body,
+      password: passwordHash,
+      avatarUrl: avatar,
+      verificationToken,
+    };
     await User.create(user);
+    await sgMail.send(msg(email, verificationToken));
     return user;
   } catch (err) {
     console.error("error adding user", err);
@@ -90,6 +100,44 @@ export const patchAvatar = async (filePath, userId) => {
     return serverPath;
   } catch (err) {
     console.error("error updating avatar", err);
+    throw err;
+  }
+};
+
+export const sendVerificationMail = async (email) => {
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      throw new Error("User not found");
+    }
+    const { verify, verificationToken } = user;
+    if (verify) {
+      throw new Error("Verification has already been passed");
+    }
+    await sgMail.send(msg(email, verificationToken));
+  } catch (err) {
+    console.error("err sending mail", err);
+    throw err;
+  }
+};
+
+export const verifyEmail = async (verificationToken) => {
+  console.log("verificationToken:", verificationToken);
+
+  try {
+    const user = await User.findOne({ verificationToken });
+    if (!user) {
+      throw new Error("User not found");
+    }
+    const { verify } = user;
+    if (verify) {
+      throw new Error("Verification has already been passed");
+    }
+    user.verify = true;
+    user.verificationToken = null;
+    await user.save();
+  } catch (err) {
+    console.error("err verification", err);
     throw err;
   }
 };
